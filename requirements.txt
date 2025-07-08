@@ -1,0 +1,8 @@
+openai>=1.0.0
+streamlit>=1.0.0
+faiss-cpu>=1.7.0
+python-dotenv
+sentence-transformers
+neo4j
+flake8
+pytest
