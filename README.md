@@ -20,6 +20,11 @@ pip install -r requirements.txt
 # OPENAI_API_KEY="sk-..."
 # NEO4J_PASSWORD="V11..."
 
+
+### 4. Syncing Data to Neo4j
+To sync the data from `story_bible_v11.json` to the Neo4j database, run:
+   python scripts/graph_sync_v11.py --project Pilot
+
 2. Running the Neo4j Database
 
 This project uses Neo4j as its knowledge graph database, which runs inside a Docker container.

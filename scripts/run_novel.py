@@ -35,16 +35,21 @@ SUM_DIR.mkdir(exist_ok=True)
 # ───────── Utilities ─────────
 def gpt(prompt, temp=0.7, maxtok=2000):
     # 최신 openai 라이브러리 문법으로 수정합니다.
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=temp,
-        max_tokens=maxtok,
-    )
-    return response.choices[0].message.content.strip()
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=temp,
+            max_tokens=maxtok,
+        )
+        content = response.choices[0].message.content
+        return content.strip() if content else ""
+    except Exception as e:
+        print(f"GPT API 오류: {e}")
+        return ""
 
 
 def recent_summaries(k=3):
