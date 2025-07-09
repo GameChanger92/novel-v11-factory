@@ -1,35 +1,43 @@
 {
-  "title": "헌터 오브 어비스",
-  "world": {
-    "setting": "헌터&던전의 현대 서울",
-    "mana_system": "코어 흡수"
+  "metadata": {
+    "title": "헌터 오브 어비스",
+    "author_persona": "웹소설 작가",
+    "genre": "현대 판타지",
+    "logline": "E등급 헌터 성훈이 심연의 던전에서 특별한 능력을 각성하며 성장하는 이야기."
   },
-  "characters": {
-    "성훈": {
+  "world_setting": {
+    "setting_description": "현대 서울을 배경으로, 곳곳에 '게이트'와 '던전'이 출현하는 세계. 헌터 협회가 헌터들을 관리한다.",
+    "mana_system": "몬스터의 '코어'를 흡수하여 마나와 스킬을 얻는 방식."
+  },
+  "characters": [
+    {
       "graph_id": "char_001",
       "name": "성훈",
       "role": "주인공",
       "class": "E등급 헌터",
+      "description": "가난한 집안 출신으로, 병든 동생의 약값을 벌기 위해 헌터가 되었다. 초기에는 무시당하지만 잠재력이 크다.",
       "hair": "흑발"
     },
-    "유진": {
-      "graph_id": "char_002", 
+    {
+      "graph_id": "char_002",
       "name": "유진",
       "role": "여주인공",
-      "class": "C등급 힐러"
+      "class": "C등급 힐러",
+      "description": "유명 길드의 유망주. 성훈의 잠재력을 가장 먼저 알아보고 도와주는 조력자.",
+      "hair": "금발"
     }
-  },
-  "locations": {
-    "서울": {
+  ],
+  "locations": [
+    {
       "graph_id": "loc_001",
-      "name": "서울",
-      "type": "도시",
-      "description": "현대 서울, 헌터와 던전이 존재하는 세계"
+      "name": "강남역 G-7 게이트",
+      "type": "던전 입구",
+      "description": "가장 흔한 E등급 게이트로, 고블린과 슬라임이 주로 출현한다."
     }
-  },
-  "items": {},
+  ],
+  "items": [],
   "rules": [
-    "헌터 등급은 S,A,B,C,D,E 여섯 단계",
-    "마석은 회차당 한번만 파괴 가능"
+    "헌터 등급은 S, A, B, C, D, E 여섯 단계이다.",
+    "마석은 회차당 한 번만 파괴 가능하다."
   ]
 }
