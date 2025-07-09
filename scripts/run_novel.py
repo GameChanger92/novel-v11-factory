@@ -57,7 +57,7 @@ def mini_bit(one_liner: str) -> dict:
     prompt = f"다음 플롯을 3줄 비트로 쪼개 줘.\n플롯:{one_liner}"
     out = gpt(prompt, temp=0.4, maxtok=120)
     lines = [line.strip("-•  ") for line in out.splitlines() if line.strip()]
-    return {f"bit_{i+1}": line for i, line in enumerate(lines[:3])}
+    return {f"bit_{i + 1}": line for i, line in enumerate(lines[:3])}
 
 
 def scene_points(bit: dict) -> list[str]:
@@ -72,7 +72,7 @@ def scene_points(bit: dict) -> list[str]:
 # ───────── Draft pipeline ─────────
 def generate_draft(ctx: str, scenes: list[str]) -> str:
     # W504 오류 해결: 연산자(+)를 다음 줄 앞으로 이동
-    scene_prompts = "\n".join(f"{i+1}. {s}" for i, s in enumerate(scenes))
+    scene_prompts = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(scenes))
     prompt = (
         f"[세계관]\n{BIBLE}\n\n[최근 요약]\n{ctx}\n\n"
         f"[장면]\n{scene_prompts}"
