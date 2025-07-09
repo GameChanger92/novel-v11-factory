@@ -1,6 +1,7 @@
 import yaml
 import pathlib
 
+
 def load_story_bible(project_name: str) -> dict:
     """
     지정된 프로젝트의 story_bible.yaml 파일을 로드합니다.

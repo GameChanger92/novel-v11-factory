@@ -1,5 +1,6 @@
 import os
 
+
 def build_context_for_episode(project_name: str, episode_number: int) -> str:
     """
     주어진 에피소드를 생성하기 위한 컨텍스트를 구성합니다.
@@ -17,5 +18,7 @@ def build_context_for_episode(project_name: str, episode_number: int) -> str:
     print(f"ContextBuilder: Using token budget of {token_budget}")
 
     # 나중에 실제 컨텍스트 구성 로직이 여기에 들어갑니다.
-    dummy_context = f"This is a dummy context for {project_name}, episode {episode_number}."
+    dummy_context = (
+        f"This is a dummy context for {project_name}, episode {episode_number}."
+    )
     return dummy_context
