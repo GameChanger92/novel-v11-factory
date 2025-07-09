@@ -25,6 +25,14 @@ pip install -r requirements.txt
 To sync the data from `story_bible_v11.json` to the Neo4j database, run:
    python scripts/graph_sync_v11.py --project Pilot
 
+
+### 5. Building the FAISS Index (for RAG)
+To create or update the vector index for a project, run:
+```bash
+python scripts/build_faiss_index_v11.py --project Pilot --source-bible projects/Pilot/story_bible_v11.json
+
+
+
 2. Running the Neo4j Database
 
 This project uses Neo4j as its knowledge graph database, which runs inside a Docker container.
