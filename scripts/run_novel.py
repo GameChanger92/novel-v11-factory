@@ -2,6 +2,7 @@
 ONE-FILE NOVEL ENGINE (≈ 150 lines)
 Compatible I/O with GameChanger V11.
 """
+
 import argparse
 import csv
 import os
@@ -22,9 +23,9 @@ client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
 PROJECT_NAME = "Pilot"
 OUTLEN = 4800  # target chars
-BIBLE = pathlib.Path(
-    f"projects/{PROJECT_NAME}/story_bible.yaml"
-).read_text(encoding="utf8")
+BIBLE = pathlib.Path(f"projects/{PROJECT_NAME}/story_bible.yaml").read_text(
+    encoding="utf8"
+)
 EP_DIR = pathlib.Path(f"projects/{PROJECT_NAME}/episodes")
 EP_DIR.mkdir(exist_ok=True)
 SUM_DIR = pathlib.Path(f"projects/{PROJECT_NAME}/summaries")
@@ -61,7 +62,9 @@ def mini_bit(one_liner: str) -> dict:
 
 def scene_points(bit: dict) -> list[str]:
     joined = " ".join(bit.values())
-    prompt = "이 줄거리를 6개 장면 포인트로 분해해줘.각 항목은 1문장 한국어로, 순서 유지."
+    prompt = (
+        "이 줄거리를 6개 장면 포인트로 분해해줘.각 항목은 1문장 한국어로, 순서 유지."
+    )
     out = gpt(f"{joined}\n{prompt}", temp=0.5, maxtok=200)
     return [line.strip("-•  ") for line in out.splitlines() if line.strip()][:7]
 
@@ -125,9 +128,7 @@ def run(total: int):
             continue
 
         EP_DIR.joinpath(f"ep_{n:03}.txt").write_text(draft, encoding="utf8")
-        SUM_DIR.joinpath(f"ep_{n:03}.txt").write_text(
-            summarize(draft), encoding="utf8"
-        )
+        SUM_DIR.joinpath(f"ep_{n:03}.txt").write_text(summarize(draft), encoding="utf8")
         print(f"✓ EP{n} saved")
         time.sleep(random.uniform(1, 3))
 
@@ -137,4 +138,3 @@ if __name__ == "__main__":
     ap.add_argument("--total", type=int, required=True, help="number of episodes")
     args = ap.parse_args()
     run(args.total)
-    
