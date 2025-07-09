@@ -4,12 +4,13 @@ Tests for the graph_sync_v11.py script.
 
 import os
 import sys
+import json
 
 # Add the scripts directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 import pytest  # noqa: E402
-from unittest.mock import patch, MagicMock  # noqa: E402
+from unittest.mock import patch, MagicMock, mock_open  # noqa: E402
 from graph_sync_v11 import Neo4jSyncer  # noqa: E402
 
 
@@ -92,6 +93,86 @@ class TestNeo4jSyncer:
 
         # Verify success message was printed
         mock_print.assert_called_once_with("✅ Schema initialization completed successfully.")
+
+    @patch.dict(os.environ, {
+        'NEO4J_URI': 'bolt://localhost:7687',
+        'NEO4J_USER': 'neo4j',
+        'NEO4J_PASSWORD': 'test_password'
+    })
+    @patch('graph_sync_v11.neo4j.GraphDatabase.driver')
+    @patch('builtins.print')
+    def test_sync_bible_to_graph(self, mock_print, mock_driver):
+        """Test Bible synchronization with proper node creation."""
+        mock_driver_instance = MagicMock()
+        mock_session = MagicMock()
+        mock_driver.return_value = mock_driver_instance
+        mock_driver_instance.session.return_value.__enter__.return_value = mock_session
+
+        syncer = Neo4jSyncer()
+
+        bible_data = {
+            "characters": {
+                "성훈": {"graph_id": "char_001", "name": "성훈", "role": "주인공"},
+                "유진": {"graph_id": "char_002", "name": "유진", "role": "여주인공"}
+            },
+            "locations": {
+                "서울": {"graph_id": "loc_001", "name": "서울", "type": "도시"}
+            },
+            "items": {}
+        }
+
+        syncer.sync_bible_to_graph(bible_data)
+
+        # Verify characters were created (2 characters)
+        assert mock_session.run.call_count >= 2
+
+        # Verify success message shows correct counts
+        expected_msg = ("✅ Bible sync completed. characters=2, "
+                        "locations=1, items=0")
+        mock_print.assert_called_once_with(expected_msg)
+
+    @patch.dict(os.environ, {
+        'NEO4J_URI': 'bolt://localhost:7687',
+        'NEO4J_USER': 'neo4j',
+        'NEO4J_PASSWORD': 'test_password'
+    })
+    @patch('graph_sync_v11.neo4j.GraphDatabase.driver')
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('os.path.exists')
+    def test_load_story_bible_success(self, mock_exists, mock_file, mock_driver):
+        """Test loading story bible successfully."""
+        mock_driver_instance = MagicMock()
+        mock_driver.return_value = mock_driver_instance
+        mock_exists.return_value = True
+
+        bible_data = {"characters": {}, "locations": {}, "items": {}}
+        mock_file.return_value.read.return_value = json.dumps(bible_data)
+
+        syncer = Neo4jSyncer()
+        result = syncer._load_story_bible("Pilot")
+
+        assert result == bible_data
+        mock_exists.assert_called_once_with(
+            "projects/Pilot/story_bible_v11.json"
+        )
+
+    @patch.dict(os.environ, {
+        'NEO4J_URI': 'bolt://localhost:7687',
+        'NEO4J_USER': 'neo4j',
+        'NEO4J_PASSWORD': 'test_password'
+    })
+    @patch('graph_sync_v11.neo4j.GraphDatabase.driver')
+    @patch('os.path.exists')
+    def test_load_story_bible_not_found(self, mock_exists, mock_driver):
+        """Test loading story bible when file not found."""
+        mock_driver_instance = MagicMock()
+        mock_driver.return_value = mock_driver_instance
+        mock_exists.return_value = False
+
+        syncer = Neo4jSyncer()
+
+        with pytest.raises(SystemExit):
+            syncer._load_story_bible("NonExistent")
 
 
 def test_argument_parsing():
