@@ -15,5 +15,5 @@ classifiers = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["engine*"]
+include = ["engine*", "scripts*"]
 exclude = ["tests*"]

@@ -6,7 +6,8 @@
         "ui"
     ],
     "extraPaths": [
-        "./scripts"
+        "./scripts",
+        "."
     ],
     "pythonVersion": "3.12"
 }

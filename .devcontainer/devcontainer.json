@@ -1,0 +1,53 @@
+{
+  "name": "Novel V11 Factory",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
+  
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": { "installBuildTools": "true" }
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  "forwardPorts": [7474, 7687, 8000, 8080, 3000],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "pip install -r requirements.txt --prefer-binary --no-cache-dir && pip install -e .",
+
+  // Environment variables for the container
+  "containerEnv": {
+    "PYTHONPATH": "/workspaces/novel-v11-factory"
+  },
+
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.black-formatter",
+        "ms-toolsai.jupyter",
+        "ms-python.isort",
+        "charliermarsh.ruff",
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.cwd": "${workspaceFolder}",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestArgs": [
+          "tests"
+        ],
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.formatting.provider": "black"
+      }
+    }
+  },
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "vscode"
+}
