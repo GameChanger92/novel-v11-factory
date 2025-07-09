@@ -1,30 +1,37 @@
 """
-ONE‑FILE NOVEL ENGINE  (≈ 150 lines)
+ONE-FILE NOVEL ENGINE (≈ 150 lines)
 Compatible I/O with GameChanger V11.
 """
+import argparse
+import csv
+import os
+import pathlib
+import random
+import re
+import time
 
-import os, re, csv, pathlib, dotenv, openai, random, time
+import dotenv
+import openai
 
 dotenv.load_dotenv()
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # 이렇게 수정!
+# openai v1.x.x 호환성을 위해 client를 생성합니다.
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 
 # ───────── Config ─────────
 MODEL = "gpt-4o-mini"
-PROJECT_NAME = "Pilot"  # <--- 이 줄을 추가해주세요!
+PROJECT_NAME = "Pilot"
 OUTLEN = 4800  # target chars
-BIBLE = pathlib.Path(f"projects/{PROJECT_NAME}/story_bible.yaml").read_text(
-    encoding="utf8"
-)  # <--- 이렇게 수정!
+BIBLE = pathlib.Path(
+    f"projects/{PROJECT_NAME}/story_bible.yaml"
+).read_text(encoding="utf8")
 EP_DIR = pathlib.Path(f"projects/{PROJECT_NAME}/episodes")
-EP_DIR.mkdir(exist_ok=True)  # <--- 이렇게 수정!
+EP_DIR.mkdir(exist_ok=True)
 SUM_DIR = pathlib.Path(f"projects/{PROJECT_NAME}/summaries")
-SUM_DIR.mkdir(exist_ok=True)  # <--- 이렇게 수정!
+SUM_DIR.mkdir(exist_ok=True)
+
 
 # ───────── Utilities ─────────
-# openai v1.x.x 호환성을 위해 client를 생성합니다.
-client = openai.OpenAI()
-
-
 def gpt(prompt, temp=0.7, maxtok=2000):
     # 최신 openai 라이브러리 문법으로 수정합니다.
     response = client.chat.completions.create(
@@ -48,35 +55,31 @@ def recent_summaries(k=3):
 def mini_bit(one_liner: str) -> dict:
     prompt = f"다음 플롯을 3줄 비트로 쪼개 줘.\n플롯:{one_liner}"
     out = gpt(prompt, temp=0.4, maxtok=120)
-    lines = [l.strip("-•  ") for l in out.splitlines() if l.strip()]
-    return {f"bit_{i+1}": l for i, l in enumerate(lines[:3])}
+    # E741 오류 해결: 변수 'l'을 'line'으로 변경
+    lines = [line.strip("-•  ") for line in out.splitlines() if line.strip()]
+    return {f"bit_{i+1}": line for i, line in enumerate(lines[:3])}
 
 
 def scene_points(bit: dict) -> list[str]:
     joined = " ".join(bit.values())
-    prompt = (
-        "이 줄거리를 6개 장면 포인트로 분해해줘." "각 항목은 1문장 한국어로, 순서 유지."
-    )
+    prompt = "이 줄거리를 6개 장면 포인트로 분해해줘.각 항목은 1문장 한국어로, 순서 유지."
     out = gpt(f"{joined}\n{prompt}", temp=0.5, maxtok=200)
-    return [l.strip("-•  ") for l in out.splitlines() if l.strip()][:7]
+    # E741 오류 해결: 변수 'l'을 'line'으로 변경
+    return [line.strip("-•  ") for line in out.splitlines() if line.strip()][:7]
 
 
 # ───────── Draft pipeline ─────────
 def generate_draft(ctx: str, scenes: list[str]) -> str:
     prompt = (
         f"[세계관]\n{BIBLE}\n\n[최근 요약]\n{ctx}\n\n"
-        f"[장면]\n"
-        + "\n".join(f"{i+1}. {s}" for i, s in enumerate(scenes))
-        + f"\n\n=> 1인칭·대사 50%·{OUTLEN}±300자로 작성"
+        f"[장면]\n" + "\n".join(f"{i+1}. {s}" for i, s in enumerate(scenes)) +
+        f"\n\n=> 1인칭·대사 50%·{OUTLEN}±300자로 작성"
     )
     return gpt(prompt, temp=0.7, maxtok=2200)
 
 
 def self_critique(text: str) -> str:
-    ask = (
-        "아래 소설을 읽고 문제점 3개와 수정본(동일 분량)을 줘."
-        "논리 오류·톤 불일치·지루함을 중점으로."
-    )
+    ask = "아래 소설을 읽고 문제점 3개와 수정본(동일 분량)을 줘.논리 오류·톤 불일치·지루함을 중점으로."
     rsp = gpt(f"{ask}\n###소설###\n{text}", temp=0.3, maxtok=2400)
     return rsp.split("수정본:")[-1].strip()
 
@@ -122,14 +125,14 @@ def run(total: int):
             continue
 
         EP_DIR.joinpath(f"ep_{n:03}.txt").write_text(draft, encoding="utf8")
-        SUM_DIR.joinpath(f"ep_{n:03}.txt").write_text(summarize(draft), encoding="utf8")
+        SUM_DIR.joinpath(f"ep_{n:03}.txt").write_text(
+            summarize(draft), encoding="utf8"
+        )
         print(f"✓ EP{n} saved")
         time.sleep(random.uniform(1, 3))
 
 
 if __name__ == "__main__":
-    import argparse
-
     ap = argparse.ArgumentParser()
     ap.add_argument("--total", type=int, required=True, help="number of episodes")
     args = ap.parse_args()
