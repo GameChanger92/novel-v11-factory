@@ -55,7 +55,6 @@ def recent_summaries(k=3):
 def mini_bit(one_liner: str) -> dict:
     prompt = f"다음 플롯을 3줄 비트로 쪼개 줘.\n플롯:{one_liner}"
     out = gpt(prompt, temp=0.4, maxtok=120)
-    # E741 오류 해결: 변수 'l'을 'line'으로 변경
     lines = [line.strip("-•  ") for line in out.splitlines() if line.strip()]
     return {f"bit_{i+1}": line for i, line in enumerate(lines[:3])}
 
@@ -64,15 +63,16 @@ def scene_points(bit: dict) -> list[str]:
     joined = " ".join(bit.values())
     prompt = "이 줄거리를 6개 장면 포인트로 분해해줘.각 항목은 1문장 한국어로, 순서 유지."
     out = gpt(f"{joined}\n{prompt}", temp=0.5, maxtok=200)
-    # E741 오류 해결: 변수 'l'을 'line'으로 변경
     return [line.strip("-•  ") for line in out.splitlines() if line.strip()][:7]
 
 
 # ───────── Draft pipeline ─────────
 def generate_draft(ctx: str, scenes: list[str]) -> str:
+    # W504 오류 해결: 연산자(+)를 다음 줄 앞으로 이동
+    scene_prompts = "\n".join(f"{i+1}. {s}" for i, s in enumerate(scenes))
     prompt = (
         f"[세계관]\n{BIBLE}\n\n[최근 요약]\n{ctx}\n\n"
-        f"[장면]\n" + "\n".join(f"{i+1}. {s}" for i, s in enumerate(scenes)) +
+        f"[장면]\n{scene_prompts}"
         f"\n\n=> 1인칭·대사 50%·{OUTLEN}±300자로 작성"
     )
     return gpt(prompt, temp=0.7, maxtok=2200)
