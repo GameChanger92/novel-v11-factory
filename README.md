@@ -56,6 +56,22 @@ python scripts/run_novel.py --total 3
 
 Check the generated files in the projects/Pilot/episodes/ directory.
 
+## 🟢 Build FAISS Index
+
+Build a FAISS index from story bible v11 for semantic search and RAG:
+
+```bash
+# Build FAISS index for the Pilot project
+python scripts/build_faiss_index_v11.py --project Pilot --source-bible projects/Pilot/story_bible_v11.json
+
+# Use a different embedding model (optional)
+python scripts/build_faiss_index_v11.py --project Pilot --source-bible projects/Pilot/story_bible_v11.json --model sentence-transformers/paraphrase-MiniLM-L3-v2
+```
+
+This creates:
+- `memory/faiss_index/Pilot/index.faiss` - The FAISS vector index
+- `memory/faiss_index/Pilot/meta.pkl` - Metadata for each indexed text
+
 ✅ Project Milestones
 Week 1: Foundation & 3-Episode MVP
 

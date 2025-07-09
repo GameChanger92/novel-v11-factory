@@ -1,8 +1,9 @@
+numpy<2.0.0
+faiss-cpu==1.7.4
 openai>=1.0.0
 streamlit>=1.0.0
-faiss-cpu>=1.7.0
 python-dotenv
-sentence-transformers
+sentence-transformers>=2.5
 neo4j
 flake8
 pytest
