@@ -4,13 +4,13 @@ Tests for the graph_sync_v11.py script.
 
 import os
 import sys
-import pytest
-from unittest.mock import patch, MagicMock
 
 # Add the scripts directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
-from graph_sync_v11 import Neo4jSyncer
+import pytest  # noqa: E402
+from unittest.mock import patch, MagicMock  # noqa: E402
+from graph_sync_v11 import Neo4jSyncer  # noqa: E402
 
 
 class TestNeo4jSyncer:
