@@ -18,7 +18,7 @@ pip install -r requirements.txt
 # 3. Open the .env file and add your secret keys.
 # It must contain at least:
 # OPENAI_API_KEY="sk-..."
-# NEO4J_PASSWORD="please_change_this_default_password"
+# NEO4J_PASSWORD=V11_WebNovel_Factory_Will_Change_The_World_!!!
 
 2. Running the Neo4j Database
 
