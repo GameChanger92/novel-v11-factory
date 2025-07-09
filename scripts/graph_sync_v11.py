@@ -71,7 +71,7 @@ class Neo4jSyncer:
         if not file_path.exists():
             print(f"⛔️ ERROR: Story Bible file not found at: {file_path}", file=sys.stderr)
             sys.exit(1)
-        
+
         try:
             with open(file_path, "r", encoding="utf8") as f:
                 return json.load(f)
@@ -89,7 +89,7 @@ class Neo4jSyncer:
             "locations": "Location",
             "items": "Item"
         }
-        
+
         stats = {key: 0 for key in sections_to_sync.keys()}
 
         with self.driver.session() as session:
@@ -104,7 +104,7 @@ class Neo4jSyncer:
                         )
                         session.run(query, entity=entity)  # type: ignore
                         stats[section] += 1
-        
+
         print(f"✅ Bible sync completed. "
               f"characters={stats['characters']}, "
               f"locations={stats['locations']}, "

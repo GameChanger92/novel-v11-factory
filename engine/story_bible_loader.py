@@ -3,6 +3,7 @@ import json  # yaml 대신 json을 임포트합니다.
 import pathlib
 import sys   # 에러 처리를 위해 sys를 임포트합니다.
 
+
 def load_story_bible(project_name: str) -> dict:
     """
     지정된 프로젝트의 story_bible_v11.json 파일을 로드합니다.
