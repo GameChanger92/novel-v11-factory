@@ -18,7 +18,7 @@ pip install -r requirements.txt
 # 3. Open the .env file and add your secret keys.
 # It must contain at least:
 # OPENAI_API_KEY="sk-..."
-# NEO4J_PASSWORD=V11_WebNovel_Factory_Will_Change_The_World_!!!
+# NEO4J_PASSWORD="V11..."
 
 2. Running the Neo4j Database
 
@@ -39,7 +39,7 @@ Log in with:
 
 Username: neo4j
 
-Password: please_change_this_default_password (or the one you set in .env)
+Password: The one you set in your `.env` file for `NEO4J_PASSWORD`.
 
 3. Running the Pilot Novel Generation
 
