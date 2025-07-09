@@ -68,7 +68,7 @@ class Neo4jSyncer:
         지정된 프로젝트의 story_bible_v11.json 파일을 로드합니다.
         """
         file_path = pathlib.Path(f"projects/{project_name}/story_bible_v11.json")
-        if not file_path.exists():
+        if not os.path.exists(str(file_path)):
             print(f"⛔️ ERROR: Story Bible file not found at: {file_path}", file=sys.stderr)
             sys.exit(1)
 

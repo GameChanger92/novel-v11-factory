@@ -8,7 +8,14 @@ def test_load_story_bible_success():
     bible_data = load_story_bible(project_name)
     assert isinstance(bible_data, dict)
     assert "world" in bible_data
-    assert bible_data["characters"]["성훈"]["role"] == "주인공"
+    # characters가 배열 형태이므로 적절히 수정
+    characters = bible_data["characters"]
+    assert isinstance(characters, list)
+    assert len(characters) > 0
+    # 첫 번째 캐릭터가 성훈인지 확인
+    sunghoon = next((char for char in characters if char["name"] == "성훈"), None)
+    assert sunghoon is not None
+    assert sunghoon["role"] == "주인공"
 
 
 def test_load_story_bible_file_not_found():
