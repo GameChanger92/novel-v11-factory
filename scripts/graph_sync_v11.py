@@ -4,6 +4,7 @@ Compatible with GameChanger V11.
 """
 
 import argparse
+import json
 import os
 import sys
 
@@ -56,6 +57,66 @@ class Neo4jSyncer:
 
         print("✅ Schema initialization completed successfully.")
 
+    def sync_bible_to_graph(self, bible_data: dict) -> None:
+        """
+        Sync Bible data to Neo4j graph, merging characters, locations, and items.
+        """
+        counts = {"characters": 0, "locations": 0, "items": 0}
+
+        with self.driver.session() as session:
+            # Sync characters
+            if "characters" in bible_data:
+                for char_data in bible_data["characters"].values():
+                    if "graph_id" in char_data:
+                        query = """
+                        MERGE (c:Character {graph_id: $char.graph_id})
+                        ON CREATE SET c += $char, c.created_at = timestamp()
+                        ON MATCH SET c += $char, c.updated_at = timestamp()
+                        """
+                        session.run(query, char=char_data)
+                        counts["characters"] += 1
+
+            # Sync locations
+            if "locations" in bible_data:
+                for loc_data in bible_data["locations"].values():
+                    if "graph_id" in loc_data:
+                        query = """
+                        MERGE (l:Location {graph_id: $loc.graph_id})
+                        ON CREATE SET l += $loc, l.created_at = timestamp()
+                        ON MATCH SET l += $loc, l.updated_at = timestamp()
+                        """
+                        session.run(query, loc=loc_data)
+                        counts["locations"] += 1
+
+            # Sync items
+            if "items" in bible_data:
+                for item_data in bible_data["items"].values():
+                    if "graph_id" in item_data:
+                        query = """
+                        MERGE (i:Item {graph_id: $item.graph_id})
+                        ON CREATE SET i += $item, i.created_at = timestamp()
+                        ON MATCH SET i += $item, i.updated_at = timestamp()
+                        """
+                        session.run(query, item=item_data)
+                        counts["items"] += 1
+
+        success_msg = (
+            f"✅ Bible sync completed. characters={counts['characters']}, "
+            f"locations={counts['locations']}, items={counts['items']}"
+        )
+        print(success_msg)
+
+    def _load_story_bible(self, project_name: str) -> dict:
+        """
+        Load story bible from projects/{project}/story_bible_v11.json
+        """
+        bible_path = f"projects/{project_name}/story_bible_v11.json"
+        if not os.path.exists(bible_path):
+            sys.exit("⛔ Bible not found")
+
+        with open(bible_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -75,14 +136,22 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.init_schema:
-        syncer = None
-        try:
-            syncer = Neo4jSyncer()
+    syncer = None
+    try:
+        syncer = Neo4jSyncer()
+
+        if args.init_schema:
             syncer.init_schema()
-        except Exception as e:
+        else:
+            # Load Bible and sync to graph
+            bible_data = syncer._load_story_bible(args.project)
+            syncer.sync_bible_to_graph(bible_data)
+    except Exception as e:
+        if args.init_schema:
             print(f"❌ Error initializing schema: {e}", file=sys.stderr)
-            sys.exit(1)
-        finally:
-            if syncer:
-                syncer.close()
+        else:
+            print(f"❌ Error syncing Bible: {e}", file=sys.stderr)
+        sys.exit(1)
+    finally:
+        if syncer:
+            syncer.close()

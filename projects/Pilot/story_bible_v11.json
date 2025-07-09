@@ -1,0 +1,35 @@
+{
+  "title": "헌터 오브 어비스",
+  "world": {
+    "setting": "헌터&던전의 현대 서울",
+    "mana_system": "코어 흡수"
+  },
+  "characters": {
+    "성훈": {
+      "graph_id": "char_001",
+      "name": "성훈",
+      "role": "주인공",
+      "class": "E등급 헌터",
+      "hair": "흑발"
+    },
+    "유진": {
+      "graph_id": "char_002", 
+      "name": "유진",
+      "role": "여주인공",
+      "class": "C등급 힐러"
+    }
+  },
+  "locations": {
+    "서울": {
+      "graph_id": "loc_001",
+      "name": "서울",
+      "type": "도시",
+      "description": "현대 서울, 헌터와 던전이 존재하는 세계"
+    }
+  },
+  "items": {},
+  "rules": [
+    "헌터 등급은 S,A,B,C,D,E 여섯 단계",
+    "마석은 회차당 한번만 파괴 가능"
+  ]
+}
