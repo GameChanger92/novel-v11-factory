@@ -28,7 +28,7 @@
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // Neo4j에 필요한 포트만 남기고 정리했습니다.
-  "forwardPorts": [7747, 7687],
+  "forwardPorts": [7474, 7687],
 
   // Use 'postCreateCommand' to run commands after the container is created.
   // 파이썬 라이브러리 자동 설치 (기존 기능 유지)
