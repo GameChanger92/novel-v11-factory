@@ -16,15 +16,15 @@
     }
   },
 
-  // ★★★ 2. docker-compose.yml 파일과 연결 ★★★
+  // ★★★ 변경점 1: docker-compose.yml 파일 경로를 더 명확하게 지정 ★★★
   "dockerComposeFile": [
-    "../docker-compose.yml"
+    "${containerWorkspaceFolder}/docker-compose.yml"
   ],
 
-  // ★★★ 3. neo4j 서비스를 자동으로 실행 ★★★
-  "runServices": [
-    "neo4j"
-  ],
+  // ★★★ runServices는 잠시 주석 처리합니다. ★★★
+  // "runServices": [
+  //   "neo4j"
+  // ],
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // Neo4j에 필요한 포트만 남기고 정리했습니다.
@@ -34,14 +34,15 @@
   // 파이썬 라이브러리 자동 설치 (기존 기능 유지)
   "postCreateCommand": "pip install -r requirements.txt --prefer-binary --no-cache-dir && pip install -e .",
 
-  // ★★★ 4. Codespace에 접속할 때마다 Neo4j가 켜졌는지 확인하는 명령어 자동 실행 ★★★
+  // ★★★ 변경점 2: 접속 후에 직접 docker compose up 명령어를 실행하도록 변경 ★★★
+  // 이렇게 하면 실행 순서가 꼬일 위험이 줄어듭니다.
   "postAttachCommand": {
-    "server": "docker ps --format '{{.Names}}: {{.Status}}' && echo 'Neo4j auto-start check complete!'"
+    "server": "docker compose up -d neo4j && echo 'Neo4j auto-start command issued!'"
   },
 
   // Environment variables for the container
   "containerEnv": {
-    "PYTHONPATH": "/workspaces/novel-v11-factory"
+    "PYTHONPATH": "${containerWorkspaceFolder}"
   },
 
   // Configure tool-specific properties. (기존 설정 모두 유지)
