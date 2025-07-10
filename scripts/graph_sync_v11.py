@@ -63,7 +63,7 @@ class Neo4jSyncer:
 
         print("✅ Schema initialization completed successfully.")
 
-    def _load_story_bible(self, project_name: str) -> dict:
+    def load_story_bible(self, project_name: str) -> dict:
         """
         지정된 프로젝트의 story_bible_v11.json 파일을 로드합니다.
         """
@@ -129,22 +129,22 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    syncer = None
+    neo4j_syncer = None
     try:
-        syncer = Neo4jSyncer()
+        neo4j_syncer = Neo4jSyncer()
 
         # --init-schema 옵션이 있으면 스키마 초기화 실행
         if args.init_schema:
-            syncer.init_schema()
+            neo4j_syncer.init_schema()
         # 옵션이 없으면 기본 동작으로 데이터 동기화 실행
         else:
             print(f"프로젝트 '{args.project}'의 Story Bible을 Neo4j와 동기화합니다...")
-            bible_data = syncer._load_story_bible(args.project)
-            syncer.sync_bible_to_graph(bible_data)
+            story_bible_data = neo4j_syncer.load_story_bible(args.project)
+            neo4j_syncer.sync_bible_to_graph(story_bible_data)
 
     except Exception as e:
         print(f"❌ Error: {e}", file=sys.stderr)
         sys.exit(1)
     finally:
-        if syncer:
-            syncer.close()
+        if neo4j_syncer:
+            neo4j_syncer.close()
