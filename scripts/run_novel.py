@@ -25,9 +25,10 @@ client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # --- 2. 설정은 이제 config.py에서 가져옵니다 ---
 settings = get_settings()
-MODEL = "gpt-4o-mini" # 이 부분도 나중에는 settings에서 가져올 수 있습니다.
+MODEL = "gpt-4o-mini"  # 이 부분도 나중에는 settings에서 가져올 수 있습니다.
 OUTLEN = 4800
 # -----------------------------------------------
+
 
 # --- 3. 기존의 유틸리티 함수들은 대부분 유지합니다 ---
 # 하지만 이제 gpt 함수는 조금 더 안정적으로 만듭니다.
@@ -50,6 +51,7 @@ def gpt(prompt, temp=0.7, maxtok=2000):
         # 오류 발생 시 빈 문자열을 반환하여 파이프라인이 멈추지 않게 합니다.
         return ""
 
+
 def self_critique_and_refine(text: str) -> str:
     """LLM을 이용해 초고를 스스로 비평하고 개선합니다."""
     ask = "아래 소설 초고를 읽고, 논리적 오류, 캐릭터 붕괴, 또는 지루한 부분을 찾아 전문가처럼 수정해줘. 분량은 원본과 비슷하게 유지해줘."
@@ -57,10 +59,14 @@ def self_critique_and_refine(text: str) -> str:
     # self-critique는 품질에 중요하므로 더 좋은 모델을 쓸 수도 있습니다.
     return gpt(prompt, temp=0.4, maxtok=4000)
 
+
 def summarize(text: str) -> str:
     """생성된 에피소드를 요약합니다."""
     return gpt("아래 글을 400자 내외로 핵심 사건 위주로 요약해줘:\n" + text, temp=0.3, maxtok=400)
+
+
 # ---------------------------------------------------
+
 
 # --- 4. 메인 실행 루프를 대대적으로 수정합니다 ---
 def run_pilot(project_name: str, total_episodes: int, start_from: int = 1):
@@ -79,7 +85,7 @@ def run_pilot(project_name: str, total_episodes: int, start_from: int = 1):
     if not outline_path.exists():
         print(f"❌ Error: outline.csv not found for project '{project_name}'")
         return
-        
+
     outline_map = {
         int(r["ep_no"]): r["outline"]
         for r in csv.DictReader(open(outline_path, encoding="utf8"))
@@ -91,7 +97,7 @@ def run_pilot(project_name: str, total_episodes: int, start_from: int = 1):
 
     for n in range(start_from, total_episodes + 1):
         print(f"🔥 Generating EP{n:03}...")
-        
+
         # 현재 에피소드의 한 줄 줄거리 가져오기
         plot_query = outline_map.get(n, f"{n}화: 시스템의 도움으로 위기를 극복한다.")
         print(f"  - Plot Query: {plot_query}")
@@ -102,7 +108,7 @@ def run_pilot(project_name: str, total_episodes: int, start_from: int = 1):
         context = build_final_prompt_context(
             project=project_name,
             episode_id=f"EP{n:03}",
-            character_name="성훈", # 주인공 이름은 나중에 설정에서 가져오도록 개선 가능
+            character_name="성훈",  # 주인공 이름은 나중에 설정에서 가져오도록 개선 가능
             plot_query=plot_query
         )
         print("  - Context built successfully.")
@@ -122,7 +128,7 @@ def run_pilot(project_name: str, total_episodes: int, start_from: int = 1):
             print(f"  - ❌ Draft generation failed for EP{n:03}. Skipping.")
             continue
         print(f"  - Draft generated. (Length: {len(draft)})")
-        
+
         # 3. 편집 및 요약 (기존과 유사)
         print("  - Refining and summarizing...")
         refined_draft = self_critique_and_refine(draft)
@@ -139,10 +145,11 @@ def run_pilot(project_name: str, total_episodes: int, start_from: int = 1):
         print("-" * 50)
         time.sleep(random.uniform(1, 3))
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run E2E pilot for GameChanger V11.")
     parser.add_argument("--project", type=str, required=True, help="The name of the project.")
     parser.add_argument("--total", type=int, required=True, help="Total number of episodes to generate.")
     args = parser.parse_args()
-    
+
     run_pilot(project_name=args.project, total_episodes=args.total)
