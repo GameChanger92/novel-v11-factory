@@ -77,8 +77,8 @@ def search_rag_by_query(project: str, query: str, k: int = 5) -> list[tuple[floa
         if i != -1:
             # Cosine distance를 similarity로 변환 (1 - distance)
             similarity = 1.0 - dist
-            # 예시: 메타데이터에서 'content' 키를 가져옴
-            content = _meta[project].get(i, {}).get('content', '내용 없음')
+            # _meta[project]는 리스트이므로, 숫자 인덱스 'i'로 직접 접근합니다.
+            content = _meta[project][i].get('content', '내용 없음')
             results.append((similarity, content))
     return results
 

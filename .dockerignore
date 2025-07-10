@@ -1,0 +1,23 @@
+# .dockerignore
+
+# Git
+.git
+.gitignore
+
+# Python
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+
+# IDE / OS
+.vscode
+.idea
+.DS_Store
+
+# 데이터와 로그는 볼륨 마운트로 처리할 것이므로, 이미지에 포함시키지 않는다.
+projects/
+memory/
+logs/

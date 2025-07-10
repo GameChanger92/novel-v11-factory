@@ -30,9 +30,15 @@ services:
       neo4j:
         condition: service_healthy
     volumes:
-      - ./projects:/app/projects
-      - ./memory/faiss_index:/app/memory/faiss_index
-      - ./logs/app:/app/logs
+      - type: bind
+        source: /workspaces/novel-v11-factory/projects
+        target: /app/projects
+      - type: bind
+        source: /workspaces/novel-v11-factory/memory
+        target: /app/memory
+      - type: bind
+        source: /workspaces/novel-v11-factory/logs
+        target: /app/logs
     env_file:
       - .env
     command: ["tail", "-f", "/dev/null"]

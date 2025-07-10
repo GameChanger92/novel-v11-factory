@@ -7,6 +7,7 @@
   "features": {
     // ★★★ 1. "Docker를 설치해줘!" 라는 핵심 기능 추가 ★★★
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
 
     // --- 기존의 유용한 기능들은 그대로 유지 ---
     "ghcr.io/devcontainers/features/git:1": {},
@@ -16,10 +17,10 @@
     }
   },
 
-  // ★★★ 변경점 1: docker-compose.yml 파일 경로를 더 명확하게 지정 ★★★
-  "dockerComposeFile": [
-    "${containerWorkspaceFolder}/docker-compose.yml"
-  ],
+  // ★★★ 변경점 1: dockerComposeFile 설정 제거 (DinD 사용으로 변경) ★★★
+  // "dockerComposeFile": [
+  //   "${containerWorkspaceFolder}/docker-compose.yml"
+  // ],
 
   // ★★★ runServices는 잠시 주석 처리합니다. ★★★
   // "runServices": [
@@ -34,6 +35,9 @@
   // 파이썬 라이브러리 자동 설치 (기존 기능 유지)
   "postCreateCommand": "pip install -r requirements.txt --prefer-binary --no-cache-dir && pip install -e .",
 
+  // ★★★ 새로운 설정: 컨테이너 시작 후 Docker Compose 자동 실행 ★★★
+  "postStartCommand": "export DOCKER_HOST=tcp://localhost:2375 && docker compose up -d",
+
   // ★★★ 변경점 2: 접속 후에 직접 docker compose up 명령어를 실행하도록 변경 ★★★
   // 이렇게 하면 실행 순서가 꼬일 위험이 줄어듭니다.
   "postAttachCommand": {
@@ -42,6 +46,7 @@
 
   // Environment variables for the container
   "containerEnv": {
+    "DOCKER_HOST": "tcp://localhost:2375",
     "PYTHONPATH": "${containerWorkspaceFolder}"
   },
 

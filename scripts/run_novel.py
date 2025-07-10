@@ -1,45 +1,43 @@
+# scripts/run_novel.py
 """
-ONE-FILE NOVEL ENGINE (≈ 150 lines)
-Compatible I/O with GameChanger V11.
+E2E (End-to-End) Pilot Runner for GameChanger V11.
+This script integrates all core engine components to generate episodes.
 """
-
 import argparse
-import csv
 import os
 import pathlib
-import random
-import re
 import time
+import random
+import csv
 
-import dotenv
+# --- 1. 우리가 만든 engine 모듈들을 임포트합니다 ---
+# 이제 모든 핵심 기능은 engine 폴더에서 가져옵니다.
+from engine.context_builder import build_final_prompt_context
+from engine.config import get_settings
+
+# OpenAI 클라이언트 초기화는 그대로 유지합니다.
 import openai
+from dotenv import load_dotenv
 
-dotenv.load_dotenv()
-# openai v1.x.x 호환성을 위해 client를 생성합니다.
+load_dotenv()
 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# ---------------------------------------------------
 
+# --- 2. 설정은 이제 config.py에서 가져옵니다 ---
+settings = get_settings()
+MODEL = "gpt-4o-mini" # 이 부분도 나중에는 settings에서 가져올 수 있습니다.
+OUTLEN = 4800
+# -----------------------------------------------
 
-# ───────── Config ─────────
-MODEL = "gpt-4o-mini"
-PROJECT_NAME = "Pilot"
-OUTLEN = 4800  # target chars
-BIBLE = pathlib.Path(f"projects/{PROJECT_NAME}/story_bible.yaml").read_text(
-    encoding="utf8"
-)
-EP_DIR = pathlib.Path(f"projects/{PROJECT_NAME}/episodes")
-EP_DIR.mkdir(exist_ok=True)
-SUM_DIR = pathlib.Path(f"projects/{PROJECT_NAME}/summaries")
-SUM_DIR.mkdir(exist_ok=True)
-
-
-# ───────── Utilities ─────────
+# --- 3. 기존의 유틸리티 함수들은 대부분 유지합니다 ---
+# 하지만 이제 gpt 함수는 조금 더 안정적으로 만듭니다.
 def gpt(prompt, temp=0.7, maxtok=2000):
-    # 최신 openai 라이브러리 문법으로 수정합니다.
+    """A robust wrapper for the OpenAI API call."""
     try:
         response = client.chat.completions.create(
             model=MODEL,
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "system", "content": "You are a world-class web novel writer."},
                 {"role": "user", "content": prompt},
             ],
             temperature=temp,
@@ -48,98 +46,103 @@ def gpt(prompt, temp=0.7, maxtok=2000):
         content = response.choices[0].message.content
         return content.strip() if content else ""
     except Exception as e:
-        print(f"GPT API 오류: {e}")
+        print(f"❌ GPT API Error: {e}")
+        # 오류 발생 시 빈 문자열을 반환하여 파이프라인이 멈추지 않게 합니다.
         return ""
 
-
-def recent_summaries(k=3):
-    files = sorted(SUM_DIR.glob("ep_*.txt"))[-k:]
-    return "\n".join(f.read_text() for f in files) or "없음"
-
-
-# ───────── Outline helpers (I/O compatible with V11) ─────────
-def mini_bit(one_liner: str) -> dict:
-    prompt = f"다음 플롯을 3줄 비트로 쪼개 줘.\n플롯:{one_liner}"
-    out = gpt(prompt, temp=0.4, maxtok=120)
-    lines = [line.strip("-•  ") for line in out.splitlines() if line.strip()]
-    return {f"bit_{i + 1}": line for i, line in enumerate(lines[:3])}
-
-
-def scene_points(bit: dict) -> list[str]:
-    joined = " ".join(bit.values())
-    prompt = (
-        "이 줄거리를 6개 장면 포인트로 분해해줘.각 항목은 1문장 한국어로, 순서 유지."
-    )
-    out = gpt(f"{joined}\n{prompt}", temp=0.5, maxtok=200)
-    return [line.strip("-•  ") for line in out.splitlines() if line.strip()][:7]
-
-
-# ───────── Draft pipeline ─────────
-def generate_draft(ctx: str, scenes: list[str]) -> str:
-    # W504 오류 해결: 연산자(+)를 다음 줄 앞으로 이동
-    scene_prompts = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(scenes))
-    prompt = (
-        f"[세계관]\n{BIBLE}\n\n[최근 요약]\n{ctx}\n\n"
-        f"[장면]\n{scene_prompts}"
-        f"\n\n=> 1인칭·대사 50%·{OUTLEN}±300자로 작성"
-    )
-    return gpt(prompt, temp=0.7, maxtok=2200)
-
-
-def self_critique(text: str) -> str:
-    ask = "아래 소설을 읽고 문제점 3개와 수정본(동일 분량)을 줘.논리 오류·톤 불일치·지루함을 중점으로."
-    rsp = gpt(f"{ask}\n###소설###\n{text}", temp=0.3, maxtok=2400)
-    return rsp.split("수정본:")[-1].strip()
-
-
-def polish(text: str) -> str:
-    ask = "아래 글을 웹소설 문체로 맞춤법·어미 통일·가독성 향상:\n"
-    return gpt(ask + text, temp=0.2, maxtok=2200)
-
-
-# ───────── Guard & summary ─────────
-def quick_guard(txt: str):
-    # 글자 수 검사 기준을 800자 ~ 8800자로 대폭 완화합니다.
-    if not (OUTLEN - 4000 <= len(txt) <= OUTLEN + 4000):
-        return "LEN"
-    if re.search(r"성훈[^.\n]{0,20}금발", txt):
-        return "CHAR_COLOR"
-    return "OK"
-
+def self_critique_and_refine(text: str) -> str:
+    """LLM을 이용해 초고를 스스로 비평하고 개선합니다."""
+    ask = "아래 소설 초고를 읽고, 논리적 오류, 캐릭터 붕괴, 또는 지루한 부분을 찾아 전문가처럼 수정해줘. 분량은 원본과 비슷하게 유지해줘."
+    prompt = f"{ask}\n\n[초고]\n{text}\n\n[전문가 수정본]\n"
+    # self-critique는 품질에 중요하므로 더 좋은 모델을 쓸 수도 있습니다.
+    return gpt(prompt, temp=0.4, maxtok=4000)
 
 def summarize(text: str) -> str:
-    return gpt("아래 글을 400자 요약:\n" + text, temp=0.3, maxtok=200)
+    """생성된 에피소드를 요약합니다."""
+    return gpt("아래 글을 400자 내외로 핵심 사건 위주로 요약해줘:\n" + text, temp=0.3, maxtok=400)
+# ---------------------------------------------------
 
+# --- 4. 메인 실행 루프를 대대적으로 수정합니다 ---
+def run_pilot(project_name: str, total_episodes: int, start_from: int = 1):
+    """
+    V11 엔진의 모든 구성 요소를 통합하여 파일럿 에피소드를 생성합니다.
+    """
+    # 프로젝트 경로 설정
+    project_dir = pathlib.Path(f"projects/{project_name}")
+    ep_dir = project_dir / "episodes"
+    sum_dir = project_dir / "summaries"
+    ep_dir.mkdir(exist_ok=True)
+    sum_dir.mkdir(exist_ok=True)
 
-# ───────── Main loop ─────────
-def run(total: int):
+    # 아웃라인 로드
+    outline_path = project_dir / "outline.csv"
+    if not outline_path.exists():
+        print(f"❌ Error: outline.csv not found for project '{project_name}'")
+        return
+        
     outline_map = {
         int(r["ep_no"]): r["outline"]
-        for r in csv.DictReader(
-            open(f"projects/{PROJECT_NAME}/outline.csv", encoding="utf8")
-        )
+        for r in csv.DictReader(open(outline_path, encoding="utf8"))
     }
-    for n in range(1, total + 1):
-        one = outline_map.get(n, f"{n}화: 즉흥 사건")
-        bits = mini_bit(one)
-        scenes = scene_points(bits)
-        ctx = recent_summaries()
-        draft = generate_draft(ctx, scenes)
-        draft = self_critique(draft)
-        draft = polish(draft)
 
-        if quick_guard(draft) != "OK":
-            print(f"✗ EP{n}: guard fail")
+    print(f"🚀 Starting 10-episode pilot run for project: '{project_name}'")
+    print(f"   - Context Token Budget: {settings.CTX_TOKEN_BUDGET}")
+    print("-" * 50)
+
+    for n in range(start_from, total_episodes + 1):
+        print(f"🔥 Generating EP{n:03}...")
+        
+        # 현재 에피소드의 한 줄 줄거리 가져오기
+        plot_query = outline_map.get(n, f"{n}화: 시스템의 도움으로 위기를 극복한다.")
+        print(f"  - Plot Query: {plot_query}")
+
+        # 1. 새로운 Context Builder 호출!
+        # KG와 RAG를 모두 사용하여 지능적인 컨텍스트를 생성합니다.
+        print("  - Building context from KG and RAG...")
+        context = build_final_prompt_context(
+            project=project_name,
+            episode_id=f"EP{n:03}",
+            character_name="성훈", # 주인공 이름은 나중에 설정에서 가져오도록 개선 가능
+            plot_query=plot_query
+        )
+        print("  - Context built successfully.")
+
+        # 2. 초고 생성
+        # 이제 generate_draft 함수가 따로 필요 없고, gpt 함수에 직접 프롬프트를 만듭니다.
+        draft_prompt = (
+            f"{context}\n\n"
+            f"[이번 화 줄거리]: {plot_query}\n\n"
+            f"=> 위의 배경 정보와 줄거리를 바탕으로, 주인공 '성훈'의 시점에서 흥미진진한 에피소드 한 편을 약 {OUTLEN}자 분량으로 작성해줘."
+            "독자가 다음 화를 결제하고 싶게 만들어야 해. 대화 비중은 50% 정도로 해줘."
+        )
+        print("  - Generating draft...")
+        draft = gpt(draft_prompt, temp=0.7, maxtok=4000)
+
+        if not draft:
+            print(f"  - ❌ Draft generation failed for EP{n:03}. Skipping.")
             continue
+        print(f"  - Draft generated. (Length: {len(draft)})")
+        
+        # 3. 편집 및 요약 (기존과 유사)
+        print("  - Refining and summarizing...")
+        refined_draft = self_critique_and_refine(draft)
+        summary = summarize(refined_draft)
+        print("  - Refinement and summary complete.")
 
-        EP_DIR.joinpath(f"ep_{n:03}.txt").write_text(draft, encoding="utf8")
-        SUM_DIR.joinpath(f"ep_{n:03}.txt").write_text(summarize(draft), encoding="utf8")
-        print(f"✓ EP{n} saved")
+        # (참고: quick_guard는 아직 너무 단순하여 잠시 비활성화. 나중에 Consistency Guard로 대체)
+
+        # 4. 파일 저장
+        (ep_dir / f"EP{n:03}.md").write_text(refined_draft, encoding="utf8")
+        (sum_dir / f"EP{n:03}.txt").write_text(summary, encoding="utf8")
+
+        print(f"✅ EP{n:03} saved successfully!")
+        print("-" * 50)
         time.sleep(random.uniform(1, 3))
 
-
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--total", type=int, required=True, help="number of episodes")
-    args = ap.parse_args()
-    run(args.total)
+    parser = argparse.ArgumentParser(description="Run E2E pilot for GameChanger V11.")
+    parser.add_argument("--project", type=str, required=True, help="The name of the project.")
+    parser.add_argument("--total", type=int, required=True, help="Total number of episodes to generate.")
+    args = parser.parse_args()
+    
+    run_pilot(project_name=args.project, total_episodes=args.total)
