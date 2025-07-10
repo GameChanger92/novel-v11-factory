@@ -4,6 +4,7 @@ from engine.retriever import retrieve_unified_context
 # 여기에 Story Bible에서 다른 정보를 읽어오는 로직을 추가할 수 있습니다.
 # from engine.story_bible_loader import load_story_bible
 
+
 def build_final_prompt_context(project: str, episode_id: str, character_name: str, plot_query: str) -> str:
     """
     주어진 정보를 바탕으로 모든 소스에서 컨텍스트를 검색하고,
@@ -29,9 +30,7 @@ def build_final_prompt_context(project: str, episode_id: str, character_name: st
             context_str += f"{i}. {context_item}\n"
 
     # 3. (선택적) 여기에 추가적인 고정 정보나 지시문을 덧붙일 수 있습니다.
-    # context_str += "\n[소설의 핵심 규칙]\n- 주인공은 절대 사람을 죽이지 않는다."
-
-    print("Prompt context successfully built.")
+    # context_str += "\n[소설의 핵심 규칙]\n- 주인공은 절대 사람을 죽이지 않는다."    print("Prompt context successfully built.")
     return context_str.strip()
 
 
@@ -45,14 +44,14 @@ if __name__ == '__main__':
         print("--- Running Context Builder Test ---")
         # 현재 에피소드의 줄거리를 가정한 쿼리
         current_plot_query = "성훈이 어두운 지하 던전의 입구를 발견하고 탐험을 시작하려 한다."
-        
+
         final_context = build_final_prompt_context(
             project='Pilot',
             episode_id='EP001',
             character_name='성훈',
             plot_query=current_plot_query
         )
-        
+
         print("\n--- Generated Final Prompt Context ---")
         print(final_context)
 

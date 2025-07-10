@@ -14,6 +14,8 @@ _meta = {}
 _neo4j_driver = None
 
 # --- Asset 로더들 ---
+
+
 def get_embedding_model():
     """싱글턴 패턴으로 임베딩 모델을 로드합니다."""
     global _model
@@ -24,12 +26,11 @@ def get_embedding_model():
         print("Model loaded.")
     return _model
 
+
 def _load_faiss_assets(project: str):
     """프로젝트별 FAISS 인덱스와 메타데이터를 로드합니다."""
-    global _faiss_idx, _meta
     if project in _faiss_idx:
         return
-    
     settings = get_settings()
     root = Path(settings.FAISS_ROOT) / project
     index_path = root / "index.faiss"
@@ -44,6 +45,7 @@ def _load_faiss_assets(project: str):
         _meta[project] = pickle.load(f)
     print("FAISS index loaded.")
 
+
 def get_neo4j_driver():
     """싱글턴 패턴으로 Neo4j 드라이버를 로드합니다."""
     global _neo4j_driver
@@ -57,15 +59,18 @@ def get_neo4j_driver():
         print("Neo4j driver initialized.")
     return _neo4j_driver
 
+
 # --- 개별 검색기 (Retrievers) ---
+
+
 def search_rag_by_query(project: str, query: str, k: int = 5) -> list[tuple[float, str]]:
     """FAISS 벡터 검색을 수행하고, (유사도 점수, 텍스트 스니펫) 리스트를 반환합니다."""
     _load_faiss_assets(project)
     model = get_embedding_model()
-    
+
     query_vector = model.encode([query])
     distances, indices = _faiss_idx[project].search(query_vector, k)
-    
+
     results = []
     for i, dist in zip(indices[0], distances[0]):
         if i != -1:
@@ -75,6 +80,7 @@ def search_rag_by_query(project: str, query: str, k: int = 5) -> list[tuple[floa
             content = _meta[project].get(i, {}).get('content', '내용 없음')
             results.append((similarity, content))
     return results
+
 
 def search_kg_for_character_status(project: str, character_name: str) -> str | None:
     """Neo4j에서 캐릭터 상태를 조회하고, 포맷된 문자열로 반환합니다."""
@@ -87,7 +93,7 @@ def search_kg_for_character_status(project: str, character_name: str) -> str | N
 
         if not result:
             return None
-        
+
         # 조회된 결과를 하나의 정보 덩어리(문자열)로 가공
         return (
             f"주인공 '{result['name']}' 정보: "
@@ -95,7 +101,10 @@ def search_kg_for_character_status(project: str, character_name: str) -> str | N
             f"핵심 설정은 다음과 같음 - {result['summary']}"
         )
 
+
 # --- 통합 검색기 (Retrieval Mixer) ---
+
+
 def retrieve_unified_context(project: str, character_name: str, query: str, top_k: int = 5) -> list[str]:
     """
     KG와 RAG에서 정보를 검색하고, 가중치를 부여하여 가장 중요한 순서대로 정렬된 컨텍스트 목록을 반환합니다.
@@ -107,11 +116,11 @@ def retrieve_unified_context(project: str, character_name: str, query: str, top_
 
     # 2. 결과에 점수를 부여하여 통합 리스트 생성
     ranked_results = []
-    
+
     # KG 결과는 가장 중요하므로 최상위 점수(1.0) 부여
     if kg_result:
         ranked_results.append((1.0, kg_result))
-        
+
     # RAG 결과는 유사도 점수를 그대로 사용
     for similarity, content in rag_results:
         # 점수가 너무 낮은 결과는 제외 (예: 0.7 미만)
@@ -123,5 +132,5 @@ def retrieve_unified_context(project: str, character_name: str, query: str, top_
 
     # 4. 최종 top_k 개수만큼 텍스트만 추출하여 반환
     final_context_list = [text for score, text in ranked_results[:top_k]]
-    
+
     return final_context_list

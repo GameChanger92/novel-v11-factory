@@ -2,6 +2,7 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     """
     프로젝트의 모든 설정을 관리하는 클래스.
@@ -20,8 +21,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding='utf-8',
-        extra='ignore' # .env 파일에 추가 필드가 있어도 무시
+        extra='ignore'  # .env 파일에 추가 필드가 있어도 무시
     )
+
 
 @lru_cache
 def get_settings() -> Settings:
@@ -30,6 +32,7 @@ def get_settings() -> Settings:
     lru_cache를 사용하여 처음 호출 시 한 번만 객체를 생성하고 캐싱합니다.
     """
     return Settings()
+
 
 # 스크립트 직접 실행 시 설정값 확인용
 if __name__ == "__main__":
