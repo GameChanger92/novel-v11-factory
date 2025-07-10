@@ -45,8 +45,8 @@ docker compose up -d neo4j
 
 After running the command, wait for about 1-2 minutes for the database to initialize.
 
-You can access the Neo4j Browser at http://localhost:7747.
-(Note: The port is 7747 because we changed it from the default 7474.)
+You can access the Neo4j Browser at http://localhost:7474.
+
 
 Log in with:
 

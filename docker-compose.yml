@@ -6,7 +6,7 @@ services:
     image: neo4j:5.14
     container_name: gamechanger_neo4j_v11
     ports:
-      - "7747:7474" # Neo4j Browser
+      - "7474:7474" # Neo4j Browser
       - "7687:7687" # Bolt port
     volumes:
       - gamechanger_neo4j_data_v11:/data
