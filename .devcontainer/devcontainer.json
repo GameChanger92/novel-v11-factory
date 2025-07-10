@@ -36,7 +36,7 @@
   "postCreateCommand": "pip install -r requirements.txt --prefer-binary --no-cache-dir && pip install -e .",
 
   // ★★★ 새로운 설정: 컨테이너 시작 후 Docker Compose 자동 실행 ★★★
-  "postStartCommand": "export DOCKER_HOST=tcp://localhost:2375 && docker compose up -d",
+  "postStartCommand": "docker compose up -d",
 
   // ★★★ 변경점 2: 접속 후에 직접 docker compose up 명령어를 실행하도록 변경 ★★★
   // 이렇게 하면 실행 순서가 꼬일 위험이 줄어듭니다.
@@ -46,7 +46,6 @@
 
   // Environment variables for the container
   "containerEnv": {
-    "DOCKER_HOST": "tcp://localhost:2375",
     "PYTHONPATH": "${containerWorkspaceFolder}"
   },
 
