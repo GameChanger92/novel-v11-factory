@@ -17,12 +17,21 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     FAISS_ROOT: str = "memory/faiss_index"
 
+    # 토큰 예산 설정 (대형 컨텍스트 모델용)
+    MAX_CTX_WINDOW: int = 1_000_000
+    CTX_TOKEN_BUDGET: int = 200_000
+
     # Pydantic 설정
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding='utf-8',
         extra='ignore'  # .env 파일에 추가 필드가 있어도 무시
     )
+
+    @property
+    def SAFE_TRIM_BUDGET(self) -> int:
+        """10% 안전 마진을 적용한 효율적인 예산을 계산합니다."""
+        return min(self.CTX_TOKEN_BUDGET, int(self.MAX_CTX_WINDOW * 0.9))
 
 
 @lru_cache

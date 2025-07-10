@@ -1,5 +1,6 @@
 # engine/context_builder.py
 from engine.retriever import retrieve_unified_context
+from engine.config import get_settings
 
 # 여기에 Story Bible에서 다른 정보를 읽어오는 로직을 추가할 수 있습니다.
 # from engine.story_bible_loader import load_story_bible
@@ -12,16 +13,22 @@ def build_final_prompt_context(project: str, episode_id: str, character_name: st
     """
     print(f"Building final prompt context for {project} - {episode_id}...")
 
-    # 1. 통합 리트리버를 호출하여 가장 중요한 정보 목록을 가져옵니다.
+    # 1. 설정에서 안전한 토큰 예산을 가져옵니다.
+    settings = get_settings()
+    budget = settings.SAFE_TRIM_BUDGET
+
+    # 2. 통합 리트리버를 호출하여 가장 중요한 정보 목록을 가져옵니다.
     #    - plot_query는 "주인공이 동굴에서 고대 유물을 발견한다"와 같은 현재 장면에 대한 설명입니다.
+    #    - budget을 전달하여 토큰 제한을 적용합니다.
     top_k_contexts = retrieve_unified_context(
         project=project,
         character_name=character_name,
         query=plot_query,
-        top_k=5  # 최종적으로 5개의 가장 중요한 정보를 선택
+        top_k=5,  # 최종적으로 5개의 가장 중요한 정보를 선택
+        budget=budget
     )
 
-    # 2. 검색된 정보 목록을 LLM이 이해하기 쉬운 형식으로 조합합니다.
+    # 3. 검색된 정보 목록을 LLM이 이해하기 쉬운 형식으로 조합합니다.
     context_str = "[중요 배경 정보]\n"
     if not top_k_contexts:
         context_str += "- 현재 사용 가능한 배경 정보 없음."
@@ -29,8 +36,10 @@ def build_final_prompt_context(project: str, episode_id: str, character_name: st
         for i, context_item in enumerate(top_k_contexts, 1):
             context_str += f"{i}. {context_item}\n"
 
-    # 3. (선택적) 여기에 추가적인 고정 정보나 지시문을 덧붙일 수 있습니다.
-    # context_str += "\n[소설의 핵심 규칙]\n- 주인공은 절대 사람을 죽이지 않는다."    print("Prompt context successfully built.")
+    # 4. (선택적) 여기에 추가적인 고정 정보나 지시문을 덧붙일 수 있습니다.
+    # context_str += "\n[소설의 핵심 규칙]\n- 주인공은 절대 사람을 죽이지 않는다."
+
+    print("Prompt context successfully built.")
     return context_str.strip()
 
 

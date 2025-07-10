@@ -3,6 +3,7 @@ import faiss
 import pickle
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
+import tiktoken
 
 from engine.config import get_settings
 
@@ -105,9 +106,21 @@ def search_kg_for_character_status(project: str, character_name: str) -> str | N
 # --- 통합 검색기 (Retrieval Mixer) ---
 
 
-def retrieve_unified_context(project: str, character_name: str, query: str, top_k: int = 5) -> list[str]:
+def _count_tokens(text: str, encoding_name: str = "cl100k_base") -> int:
+    """텍스트의 토큰 수를 계산합니다."""
+    try:
+        encoding = tiktoken.get_encoding(encoding_name)
+        return len(encoding.encode(text))
+    except Exception:
+        # tiktoken 오류 시 대략적인 추정치 사용 (단어 수 * 1.3)
+        return int(len(text.split()) * 1.3)
+
+
+def retrieve_unified_context(project: str, character_name: str, query: str,
+                             top_k: int = 5, budget: int | None = None) -> list[str]:
     """
     KG와 RAG에서 정보를 검색하고, 가중치를 부여하여 가장 중요한 순서대로 정렬된 컨텍스트 목록을 반환합니다.
+    budget이 지정된 경우, 누적 토큰 수가 예산을 초과하지 않도록 제한합니다.
     """
     # 1. 각 소스에서 정보 검색
     kg_result = search_kg_for_character_status(project, character_name)
@@ -130,7 +143,22 @@ def retrieve_unified_context(project: str, character_name: str, query: str, top_
     # 3. 점수 기준으로 내림차순 정렬
     ranked_results.sort(key=lambda x: x[0], reverse=True)
 
-    # 4. 최종 top_k 개수만큼 텍스트만 추출하여 반환
-    final_context_list = [text for score, text in ranked_results[:top_k]]
+    # 4. 토큰 예산이 지정된 경우 예산 내에서만 결과 반환
+    if budget is not None:
+        final_context_list = []
+        current_token_count = 0
 
-    return final_context_list
+        for score, text in ranked_results:
+            text_tokens = _count_tokens(text)
+            if current_token_count + text_tokens <= budget:
+                final_context_list.append(text)
+                current_token_count += text_tokens
+            else:
+                # 예산 초과 시 중단
+                break
+
+        return final_context_list
+    else:
+        # 예산이 지정되지 않은 경우 기존 로직 사용
+        final_context_list = [text for score, text in ranked_results[:top_k]]
+        return final_context_list
