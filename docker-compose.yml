@@ -1,5 +1,5 @@
 # docker-compose.yml
-version: '3.8'
+# version: '3.8'  # Docker Compose V2에서는 version 필드가 obsolete됨
 
 services:
   neo4j:
@@ -21,7 +21,7 @@ services:
       timeout: 5s
       retries: 5
 
-  gamechanger_worker_v11: # 이 부분은 나중에 사용할 것이니 지금은 신경쓰지 않으셔도 됩니다.
+  gamechanger_worker_v11: 
     build:
       context: .
       dockerfile: Dockerfile
