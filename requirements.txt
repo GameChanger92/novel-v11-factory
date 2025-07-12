@@ -9,3 +9,6 @@ neo4j
 tiktoken==0.7.0
 flake8
 pytest
+pyyaml
+jsondiff
+jsonschema

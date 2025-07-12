@@ -1,23 +1,24 @@
 # engine/retriever.py
-import faiss
+import faiss  # type: ignore
 import pickle
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 import tiktoken
+from typing import Any
 
 from engine.config import get_settings
 
 # --- 전역 캐시: 모델, 인덱스, 드라이버 등 ---
 # 이 객체들은 처음 호출될 때 한 번만 로드됩니다.
-_model = None
-_faiss_idx = {}
-_meta = {}
-_neo4j_driver = None
+_model: SentenceTransformer | None = None
+_faiss_idx: dict[str, Any] = {}
+_meta: dict[str, Any] = {}
+_neo4j_driver: Any = None
 
 # --- Asset 로더들 ---
 
 
-def get_embedding_model():
+def get_embedding_model() -> SentenceTransformer:
     """싱글턴 패턴으로 임베딩 모델을 로드합니다."""
     global _model
     if _model is None:
@@ -28,7 +29,7 @@ def get_embedding_model():
     return _model
 
 
-def _load_faiss_assets(project: str):
+def _load_faiss_assets(project: str) -> None:
     """프로젝트별 FAISS 인덱스와 메타데이터를 로드합니다."""
     if project in _faiss_idx:
         return
@@ -47,7 +48,7 @@ def _load_faiss_assets(project: str):
     print("FAISS index loaded.")
 
 
-def get_neo4j_driver():
+def get_neo4j_driver() -> Any:
     """싱글턴 패턴으로 Neo4j 드라이버를 로드합니다."""
     global _neo4j_driver
     if _neo4j_driver is None:

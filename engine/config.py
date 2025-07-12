@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Neo4j 설정
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"
-    NEO4J_PASSWORD: str
+    NEO4J_PASSWORD: str = ""
 
     # 임베딩 및 FAISS 설정
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"

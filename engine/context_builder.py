@@ -6,7 +6,8 @@ from engine.config import get_settings
 # from engine.story_bible_loader import load_story_bible
 
 
-def build_final_prompt_context(project: str, episode_id: str, character_name: str, plot_query: str) -> str:
+def build_final_prompt_context(project: str, episode_id: str,
+                               character_name: str, plot_query: str) -> str:
     """
     주어진 정보를 바탕으로 모든 소스에서 컨텍스트를 검색하고,
     LLM에 전달할 최종 프롬프트 문자열을 구성합니다.

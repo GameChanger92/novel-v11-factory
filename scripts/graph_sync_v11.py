@@ -3,6 +3,8 @@ Graph synchronization script for Neo4j schema initialization.
 Compatible with GameChanger V11.
 """
 
+from typing import Any
+
 import argparse
 import json
 import os
@@ -20,7 +22,7 @@ class Neo4jSyncer:
     Neo4j database syncer for schema initialization and management.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Neo4j driver with connection details from environment."""
         self.uri = os.getenv("NEO4J_URI")
         self.user = os.getenv("NEO4J_USER")
@@ -41,29 +43,30 @@ class Neo4jSyncer:
             self.uri, auth=(self.user, self.password)
         )
 
-    def close(self):
+    def close(self) -> None:
         """Close the Neo4j driver connection."""
         if self.driver:
             self.driver.close()
 
-    def init_schema(self):
+    def init_schema(self) -> None:
         """
         Initialize the Neo4j schema by creating constraints and indexes.
         Uses IF NOT EXISTS to prevent errors on re-runs.
         """
-        schema_queries = [
-            "CREATE CONSTRAINT IF NOT EXISTS FOR (c:Character) REQUIRE c.graph_id IS UNIQUE;",
-            "CREATE CONSTRAINT IF NOT EXISTS FOR (l:Location) REQUIRE l.graph_id IS UNIQUE;",
-            "CREATE CONSTRAINT IF NOT EXISTS FOR (i:Item) REQUIRE i.graph_id IS UNIQUE;",
-            "CREATE INDEX IF NOT EXISTS FOR (e:EpisodeSummary) ON (e.episode_id);"
-        ]
         with self.driver.session() as session:
-            for query in schema_queries:
-                session.run(query)  # type: ignore
+            # 각 스키마 쿼리를 개별적으로 실행
+            session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (c:Character) "
+                        "REQUIRE c.graph_id IS UNIQUE;")
+            session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (l:Location) "
+                        "REQUIRE l.graph_id IS UNIQUE;")
+            session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (i:Item) "
+                        "REQUIRE i.graph_id IS UNIQUE;")
+            session.run("CREATE INDEX IF NOT EXISTS FOR (e:EpisodeSummary) "
+                        "ON (e.episode_id);")
 
         print("✅ Schema initialization completed successfully.")
 
-    def load_story_bible(self, project_name: str) -> dict:
+    def load_story_bible(self, project_name: str) -> dict[str, Any]:
         """
         지정된 프로젝트의 story_bible_v11.json 파일을 로드합니다.
         """
@@ -74,12 +77,13 @@ class Neo4jSyncer:
 
         try:
             with open(file_path, "r", encoding="utf8") as f:
-                return json.load(f)
+                data: dict[str, Any] = json.load(f)
+                return data
         except json.JSONDecodeError as e:
             print(f"⛔️ ERROR: Failed to decode JSON from {file_path}. Error: {e}", file=sys.stderr)
             sys.exit(1)
 
-    def sync_bible_to_graph(self, bible_data: dict):
+    def sync_bible_to_graph(self, bible_data: dict[str, Any]) -> None:
         """
         Story Bible 데이터를 Neo4j 그래프에 동기화합니다.
         """
@@ -102,6 +106,7 @@ class Neo4jSyncer:
                             "ON CREATE SET n += $entity, n.created_at = timestamp() "
                             "ON MATCH SET n += $entity, n.updated_at = timestamp()"
                         )
+                        # Neo4j 동적 쿼리 실행 (타입 체킹을 위해 ignore 사용)
                         session.run(query, entity=entity)  # type: ignore
                         stats[section] += 1
 

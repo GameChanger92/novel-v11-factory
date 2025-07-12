@@ -32,7 +32,7 @@ OUTLEN = 4800
 
 # --- 3. 기존의 유틸리티 함수들은 대부분 유지합니다 ---
 # 하지만 이제 gpt 함수는 조금 더 안정적으로 만듭니다.
-def gpt(prompt, temp=0.7, maxtok=2000):
+def gpt(prompt: str, temp: float = 0.7, maxtok: int = 200000) -> str:
     """A robust wrapper for the OpenAI API call."""
     try:
         response = client.chat.completions.create(
@@ -69,7 +69,7 @@ def summarize(text: str) -> str:
 
 
 # --- 4. 메인 실행 루프를 대대적으로 수정합니다 ---
-def run_pilot(project_name: str, total_episodes: int, start_from: int = 1):
+def run_pilot(project_name: str, total_episodes: int, start_from: int = 1) -> None:
     """
     V11 엔진의 모든 구성 요소를 통합하여 파일럿 에피소드를 생성합니다.
     """
@@ -147,9 +147,12 @@ def run_pilot(project_name: str, total_episodes: int, start_from: int = 1):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run E2E pilot for GameChanger V11.")
-    parser.add_argument("--project", type=str, required=True, help="The name of the project.")
-    parser.add_argument("--total", type=int, required=True, help="Total number of episodes to generate.")
+    parser = argparse.ArgumentParser(
+        description="Run E2E pilot for GameChanger V11.")
+    parser.add_argument("--project", type=str, required=True,
+                        help="The name of the project.")
+    parser.add_argument("--total", type=int, required=True,
+                        help="Total number of episodes to generate.")
     args = parser.parse_args()
 
     run_pilot(project_name=args.project, total_episodes=args.total)

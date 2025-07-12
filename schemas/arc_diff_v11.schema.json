@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Arc Diff v11 Schema",
+  "description": "Schema for an Arc Detail Diff JSON file.",
+  "type": "object",
+  "required": ["arc_id", "ops"],
+  "properties": {
+    "arc_id": { 
+      "type": "string",
+      "description": "Unique identifier for the arc (e.g., A1, A2).",
+      "pattern": "^[A-Z]\\d+$" 
+    },
+    "ops": {
+      "type": "array",
+      "description": "A list of operations from jsondiff.",
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

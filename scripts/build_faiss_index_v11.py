@@ -9,11 +9,11 @@ import json
 import pickle
 import sys
 from pathlib import Path
-import faiss
+import faiss  # type: ignore
 from sentence_transformers import SentenceTransformer
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='Build FAISS index from story bible v11')
     parser.add_argument('--project', required=True, help='Project name')
     parser.add_argument('--source-bible', required=True, help='Path to story_bible_v11.json')
